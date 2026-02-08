@@ -221,8 +221,11 @@ def _initiate_connection(pairing_string: str):
         ]
         
         # Get current URL for callback
-        # In Streamlit, we need the full URL for the redirect
-        callback_url = "http://localhost:8501/"
+        # Set APP_URL environment variable in Streamlit Cloud secrets for production
+        # e.g., APP_URL = "https://your-app.streamlit.app"
+        import os
+        app_url = os.environ.get("APP_URL", "http://localhost:8501")
+        callback_url = app_url.rstrip("/") + "/"
         
         # Initiate connection
         result = connect(
