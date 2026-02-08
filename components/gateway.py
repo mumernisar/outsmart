@@ -221,11 +221,25 @@ def _initiate_connection(pairing_string: str):
         ]
         
         # Get current URL for callback
-        # Set APP_URL environment variable in Streamlit Cloud secrets for production
+        # Set APP_URL in Streamlit Cloud secrets for production
         # e.g., APP_URL = "https://your-app.streamlit.app"
         import os
-        app_url = os.environ.get("APP_URL", "http://localhost:8501")
+        
+        # Check Streamlit secrets first (for Streamlit Cloud), then env var
+        app_url = None
+        try:
+            app_url = st.secrets.get("APP_URL")
+        except Exception:
+            pass
+        
+        if not app_url:
+            app_url = os.environ.get("APP_URL", "http://localhost:8501")
+        
         callback_url = app_url.rstrip("/") + "/"
+        
+        # Debug: show what URL we're using
+        import logging
+        logging.getLogger().info(f"Using callback_url: {callback_url}")
         
         # Initiate connection
         result = connect(
