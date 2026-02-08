@@ -10,6 +10,7 @@ python -m streamlit run app.py
 
 from dotenv import load_dotenv
 import logging
+import os
 from game.arenas import Arena
 import streamlit as st
 from util.setup import setup_logger, STYLE
@@ -20,6 +21,15 @@ root = logging.getLogger()
 if "root" not in st.session_state:
     st.session_state.root = root
     setup_logger(root)
+
+# Bridge Streamlit Cloud secrets to environment variables
+# This is needed because Streamlit secrets are NOT automatically exposed as env vars
+try:
+    for key, value in st.secrets.items():
+        if isinstance(value, str) and key not in os.environ:
+            os.environ[key] = value
+except Exception:
+    pass  # No secrets configured (local dev)
 
 load_dotenv(override=True)
 
