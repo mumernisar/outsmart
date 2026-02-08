@@ -228,7 +228,9 @@ def _initiate_connection(pairing_string: str):
         # Check Streamlit secrets first (for Streamlit Cloud), then env var
         app_url = None
         try:
-            app_url = st.secrets.get("APP_URL")
+            # Streamlit secrets accessed via dict-style or attribute
+            if "APP_URL" in st.secrets:
+                app_url = st.secrets["APP_URL"]
         except Exception:
             pass
         
@@ -237,9 +239,8 @@ def _initiate_connection(pairing_string: str):
         
         callback_url = app_url.rstrip("/") + "/"
         
-        # Debug: show what URL we're using
-        import logging
-        logging.getLogger().info(f"Using callback_url: {callback_url}")
+        # DEBUG: Show what URL we're using (visible to user)
+        st.info(f"🔧 Debug: Using callback URL: {callback_url}")
         
         # Initiate connection
         result = connect(
