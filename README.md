@@ -62,6 +62,31 @@ ARENA=random
 5. From the root directory, start streamlit to run the app!  
 `python -m streamlit run app.py`
 
+## Configuration
+
+Default player models are configured in `config.py`:
+
+```python
+DEFAULT_PLAYER_MODELS = [
+    "openai/gpt-oss-120b",   # Alex
+    "gpt-5-nano",            # Blake
+    "grok-4-fast",           # Charlie
+    "claude-haiku-4-5",      # Drew
+]
+```
+
+## Gateway Connection (Optional)
+
+Connect to a Glueco Gateway to use additional LLM providers without local API keys:
+
+1. Click **Connect to Gateway** in the sidebar
+2. Enter the pairing string from your gateway admin
+3. Approve permissions when redirected
+4. Gateway models appear under **Proxy - [Provider]** in the model selector
+
+> Gateway models are unrestricted and not limited by `config.py` defaults.
+
+---
+
 If you have problems, please do get in touch - I'd love to help!  
 I'm at ed [at] edwarddonner [dot] com.
-

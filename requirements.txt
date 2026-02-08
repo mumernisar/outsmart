@@ -15,3 +15,6 @@ numpy
 scipy
 trueskill
 groq
+# Gateway SDK - https://pypi.org/project/glueco-sdk/
+glueco-sdk>=0.2.0
+

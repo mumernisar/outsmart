@@ -1,0 +1,15 @@
+Collecting glueco-sdk
+  Downloading glueco_sdk-0.1.0-py3-none-any.whl.metadata (5.2 kB)
+Requirement already satisfied: httpx>=0.24.0 in ./.venv/lib/python3.12/site-packages (from glueco-sdk) (0.28.1)
+Requirement already satisfied: pynacl>=1.5.0 in ./.venv/lib/python3.12/site-packages (from glueco-sdk) (1.6.2)
+Requirement already satisfied: anyio in ./.venv/lib/python3.12/site-packages (from httpx>=0.24.0->glueco-sdk) (4.12.1)
+Requirement already satisfied: certifi in ./.venv/lib/python3.12/site-packages (from httpx>=0.24.0->glueco-sdk) (2026.1.4)
+Requirement already satisfied: httpcore==1.* in ./.venv/lib/python3.12/site-packages (from httpx>=0.24.0->glueco-sdk) (1.0.9)
+Requirement already satisfied: idna in ./.venv/lib/python3.12/site-packages (from httpx>=0.24.0->glueco-sdk) (3.11)
+Requirement already satisfied: h11>=0.16 in ./.venv/lib/python3.12/site-packages (from httpcore==1.*->httpx>=0.24.0->glueco-sdk) (0.16.0)
+Requirement already satisfied: cffi>=2.0.0 in ./.venv/lib/python3.12/site-packages (from pynacl>=1.5.0->glueco-sdk) (2.0.0)
+Requirement already satisfied: pycparser in ./.venv/lib/python3.12/site-packages (from cffi>=2.0.0->pynacl>=1.5.0->glueco-sdk) (3.0)
+Requirement already satisfied: typing_extensions>=4.5 in ./.venv/lib/python3.12/site-packages (from anyio->httpx>=0.24.0->glueco-sdk) (4.15.0)
+Downloading glueco_sdk-0.1.0-py3-none-any.whl (14 kB)
+Installing collected packages: glueco-sdk
+Successfully installed glueco-sdk-0.1.0

@@ -129,21 +129,22 @@ class Arena:
         """
         Determine the list of model names to use in a new Arena
         If there's an environment variable ARENA=random then pick 4 random model names
-        otherwise use 4 cheap models
+        otherwise use 4 default models.
         The arena should support 3 or more names, although only 4 has been tested
         :return: a list of names of LLMs for a new Arena
         """
         arena_type = os.getenv("ARENA")
-        if arena_type == "random":
-            return random.sample(LLM.all_model_names(), 4)
+        available = LLM.all_model_names()
+        
+        if arena_type == "random" and len(available) >= 4:
+            return random.sample(available, 4)
         else:
-            return [
-                "openai/gpt-oss-120b",
-                "gpt-5-nano",
-                # "gemini-2.5-pro",
-                "grok-4-fast",
-                "claude-haiku-4-5",
-            ]
+            # Use available models, cycling if needed
+            # Ensure we have at least 4 models (some may repeat)
+            models = []
+            for i in range(4):
+                models.append(available[i % len(available)])
+            return models
 
     @classmethod
     def default(cls) -> Self:

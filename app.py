@@ -14,6 +14,7 @@ from game.arenas import Arena
 import streamlit as st
 from util.setup import setup_logger, STYLE
 from views.displays import Display
+from components.gateway import handle_gateway_callback, init_gateway_state
 
 root = logging.getLogger()
 if "root" not in st.session_state:
@@ -21,6 +22,10 @@ if "root" not in st.session_state:
     setup_logger(root)
 
 load_dotenv(override=True)
+
+# Initialize gateway state and handle callbacks early
+init_gateway_state()
+handle_gateway_callback()
 
 st.set_page_config(
     layout="wide",

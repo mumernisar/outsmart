@@ -2,6 +2,7 @@ import os
 import streamlit as st
 from game.arenas import Arena
 from models.games import Game
+from components.gateway import display_gateway_connection
 
 
 def display_ranks():
@@ -31,6 +32,12 @@ def display_latest():
 
 def display_sidebar():
     with st.sidebar:
+        # Gateway connection section
+        display_gateway_connection()
+        
+        st.markdown("---")
+        
+        # Leaderboard section
         st.markdown("### Outsmart Leaderboard")
         if os.getenv("MONGO_URI"):
             try:
@@ -43,3 +50,4 @@ def display_sidebar():
                 st.write(f"Underlying error was {e}")
         else:
             st.write("LLM rankings aren't available as this app isn't connected to the database")
+
