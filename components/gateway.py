@@ -10,6 +10,8 @@ This module provides Streamlit UI components for:
 import streamlit as st
 from typing import Optional, List
 from datetime import datetime, timezone
+import base64
+import json
 
 
 def init_gateway_state():
@@ -22,6 +24,18 @@ def init_gateway_state():
         st.session_state.gateway_error = None
 
 
+def _encode_state(data: dict) -> str:
+    """Encode state to URL-safe base64 string."""
+    json_str = json.dumps(data)
+    return base64.urlsafe_b64encode(json_str.encode()).decode()
+
+
+def _decode_state(encoded: str) -> dict:
+    """Decode URL-safe base64 string to state dict."""
+    json_str = base64.urlsafe_b64decode(encoded.encode()).decode()
+    return json.loads(json_str)
+
+
 def handle_gateway_callback():
     """
     Handle the callback from gateway approval.
@@ -32,11 +46,17 @@ def handle_gateway_callback():
     status = params.get("status")
     app_id = params.get("app_id")
     expires_at = params.get("expires_at")
+    state = params.get("state")  # Encoded pending state
     
     if status == "approved" and app_id:
         try:
-            # Try to load pending state from disk (survives redirect)
-            pending = _load_pending_state()
+            # Decode pending state from URL
+            pending = None
+            if state:
+                try:
+                    pending = _decode_state(state)
+                except Exception:
+                    pass
             
             if not pending:
                 # No pending state - might be stale callback, just clear params
@@ -67,9 +87,6 @@ def handle_gateway_callback():
                 st.session_state.gateway_pending = None
                 st.session_state.gateway_error = None
                 
-                # Clear pending state file
-                _clear_pending_state()
-                
                 # Clear URL params
                 st.query_params.clear()
                 
@@ -80,40 +97,7 @@ def handle_gateway_callback():
     elif status == "denied":
         st.session_state.gateway_error = "Connection was denied by the gateway owner."
         st.session_state.gateway_pending = None
-        _clear_pending_state()
         st.query_params.clear()
-
-
-def _get_pending_file_path():
-    """Get path to pending state file."""
-    import os
-    return os.path.join(os.path.dirname(__file__), ".gateway_pending.json")
-
-
-def _save_pending_state(pending: dict):
-    """Save pending connection state to disk."""
-    import json
-    with open(_get_pending_file_path(), "w") as f:
-        json.dump(pending, f)
-
-
-def _load_pending_state():
-    """Load pending connection state from disk."""
-    import json
-    import os
-    path = _get_pending_file_path()
-    if os.path.exists(path):
-        with open(path, "r") as f:
-            return json.load(f)
-    return None
-
-
-def _clear_pending_state():
-    """Clear pending state file."""
-    import os
-    path = _get_pending_file_path()
-    if os.path.exists(path):
-        os.remove(path)
 
 
 def display_gateway_connection():
@@ -196,6 +180,7 @@ def _initiate_connection(pairing_string: str):
             connect, AppInfo, PermissionRequest, RequestedDuration,
             parse_pairing_string,
         )
+        import os
         
         # Parse to get proxy URL for discovery
         pairing_info = parse_pairing_string(pairing_string)
@@ -223,26 +208,36 @@ def _initiate_connection(pairing_string: str):
         # Get current URL for callback
         # Set APP_URL in Streamlit Cloud secrets for production
         # e.g., APP_URL = "https://your-app.streamlit.app"
-        import os
         
         # Check Streamlit secrets first (for Streamlit Cloud), then env var
         app_url = None
         try:
-            # Streamlit secrets accessed via dict-style or attribute
-            if "APP_URL" in st.secrets:
-                app_url = st.secrets["APP_URL"]
+            app_url = st.secrets.get("APP_URL")
         except Exception:
             pass
         
         if not app_url:
             app_url = os.environ.get("APP_URL", "http://localhost:8501")
         
-        callback_url = app_url.rstrip("/") + "/"
+        # Generate keypair first so we can encode the state
+        from glueco_sdk import generate_keypair
+        keypair = generate_keypair()
         
-        # DEBUG: Show what URL we're using (visible to user)
-        st.info(f"🔧 Debug: Using callback URL: {callback_url}")
+        # Encode pending state to include in redirect_uri
+        # This survives the redirect through the proxy
+        pending_data = {
+            "proxy_url": pairing_info.proxy_url,
+            "keypair": {
+                "public_key": keypair.public_key,
+                "private_key": keypair.private_key,
+            },
+        }
+        encoded_state = _encode_state(pending_data)
         
-        # Initiate connection
+        # Build callback URL with encoded state
+        callback_url = app_url.rstrip("/") + f"/?state={encoded_state}"
+        
+        # Initiate connection (pass pre-generated keypair)
         result = connect(
             pairing_string=pairing_string,
             app=AppInfo(
@@ -251,21 +246,14 @@ def _initiate_connection(pairing_string: str):
             ),
             requested_permissions=permissions,
             redirect_uri=callback_url,
+            keypair=keypair,  # Use pre-generated keypair
         )
         
-        # Store pending connection (both session state AND disk for redirect survival)
-        pending_data = {
-            "proxy_url": result.proxy_url,
-            "keypair": {
-                "public_key": result.keypair.public_key,
-                "private_key": result.keypair.private_key,
-            },
-        }
+        # Store in session state too (for same-session returns)
         st.session_state.gateway_pending = pending_data
-        _save_pending_state(pending_data)  # Save to disk for redirect survival
         st.session_state.gateway_error = None
         
-        # Redirect to approval URL
+        # Redirect to approval URL (no need to add state here, it's in redirect_uri)
         st.markdown(
             f'<meta http-equiv="refresh" content="0;url={result.approval_url}">',
             unsafe_allow_html=True,
