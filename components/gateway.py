@@ -7,8 +7,8 @@ This module provides Streamlit UI components for:
 3. Available resources display
 """
 
-# Version for deployment verification - update this to confirm code is deployed
-GATEWAY_VERSION = "2.0.1"
+# Version for deployment verification
+GATEWAY_VERSION = "2.0.2"
 
 import streamlit as st
 from typing import Optional, List
@@ -257,12 +257,24 @@ def _initiate_connection(pairing_string: str):
         st.session_state.gateway_pending = pending_data
         st.session_state.gateway_error = None
         
-        # Redirect to approval URL (no need to add state here, it's in redirect_uri)
-        st.markdown(
-            f'<meta http-equiv="refresh" content="0;url={result.approval_url}">',
-            unsafe_allow_html=True,
-        )
-        st.info("Redirecting to gateway for approval...")
+        # Redirect to approval URL
+        # Use JavaScript for redirect since meta refresh may be blocked
+        approval_url = result.approval_url
+        
+        # Try multiple redirect methods
+        redirect_html = f'''
+        <script>
+            window.location.href = "{approval_url}";
+        </script>
+        <noscript>
+            <meta http-equiv="refresh" content="0;url={approval_url}">
+        </noscript>
+        '''
+        st.markdown(redirect_html, unsafe_allow_html=True)
+        
+        # Also show clickable link as fallback
+        st.warning("⏳ Redirecting to gateway...")
+        st.markdown(f"**If not redirected automatically, [click here to approve]({approval_url})**")
         st.stop()
         
     except Exception as e:
