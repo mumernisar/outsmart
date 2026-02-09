@@ -8,7 +8,7 @@ This module provides Streamlit UI components for:
 """
 
 # Version for deployment verification
-GATEWAY_VERSION = "2.0.2"
+GATEWAY_VERSION = "2.0.3"
 
 import streamlit as st
 from typing import Optional, List
@@ -258,23 +258,12 @@ def _initiate_connection(pairing_string: str):
         st.session_state.gateway_error = None
         
         # Redirect to approval URL
-        # Use JavaScript for redirect since meta refresh may be blocked
+        # Streamlit sanitizes JavaScript and meta refresh, so use native components
         approval_url = result.approval_url
         
-        # Try multiple redirect methods
-        redirect_html = f'''
-        <script>
-            window.location.href = "{approval_url}";
-        </script>
-        <noscript>
-            <meta http-equiv="refresh" content="0;url={approval_url}">
-        </noscript>
-        '''
-        st.markdown(redirect_html, unsafe_allow_html=True)
-        
-        # Also show clickable link as fallback
-        st.warning("⏳ Redirecting to gateway...")
-        st.markdown(f"**If not redirected automatically, [click here to approve]({approval_url})**")
+        st.success("✅ Connection prepared! Click below to approve:")
+        st.link_button("🔐 Go to Gateway Approval", approval_url, use_container_width=True)
+        st.caption(f"URL: {approval_url}")
         st.stop()
         
     except Exception as e:
