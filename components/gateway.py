@@ -7,6 +7,9 @@ This module provides Streamlit UI components for:
 3. Available resources display
 """
 
+# Version for deployment verification - update this to confirm code is deployed
+GATEWAY_VERSION = "2.0.1"
+
 import streamlit as st
 from typing import Optional, List
 from datetime import datetime, timezone
@@ -113,6 +116,7 @@ def display_gateway_connection():
     init_gateway_state()
     
     st.markdown("### 🔐 Gateway Connection")
+    st.caption(f"v{GATEWAY_VERSION}")  # Show version to verify deployment
     
     session = st.session_state.gateway_session
     
